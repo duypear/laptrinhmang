@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🚁 TDUY-NDUY Drone Control Center</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+      color: #e0e6ed;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      padding: 30px 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+      border-radius: 15px;
+      margin-bottom: 30px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      animation: pulse 4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+      position: relative;
+      z-index: 1;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 8px 20px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 20px;
+      font-size: 0.9rem;
+      backdrop-filter: blur(10px);
+      position: relative;
+      z-index: 1;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      background: #4ade80;
+      border-radius: 50%;
+      margin-right: 8px;
+      animation: blink 2s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* Tab Navigation */
+    .tab-nav {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      background: rgba(0,0,0,0.2);
+      padding: 10px;
+      border-radius: 15px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      padding: 12px 24px;
+      background: rgba(255,255,255,0.1);
+      border: 2px solid rgba(255,255,255,0.2);
+      color: #a5b4fc;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-color: #a5b4fc;
+      color: white;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .tab-btn:hover {
+      border-color: #667eea;
+      transform: translateY(-2px);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Grid Layout */
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    /* Panel Styles */
+    .panel {
+      background: linear-gradient(145deg, #1e2643 0%, #252b4a 100%);
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .panel:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
+    }
+
+    .panel-title {
+      font-size: 1.3rem;
+      margin-bottom: 20px;
+      color: #a5b4fc;
+      border-bottom: 2px solid rgba(165, 180, 252, 0.3);
+      padding-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .panel-icon {
+      font-size: 1.5rem;
+    }
+
+    /* Buttons */
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      margin: 5px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    button::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    button:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button span {
+      position: relative;
+      z-index: 1;
+    }
+
+    .btn-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    .btn-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+    .btn-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+    .btn-info { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+
+    .btn-emergency {
+      background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+      font-size: 1.2rem;
+      padding: 15px 30px;
+      animation: emergency-pulse 2s infinite;
+    }
+
+    @keyframes emergency-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      50% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+    }
+
+    /* Flight Pattern Buttons */
+    .pattern-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 10px;
+    }
+
+    .pattern-btn {
+      padding: 15px;
+      font-size: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .pattern-icon {
+      font-size: 2rem;
+    }
+
+    /* Sliders */
+    .slider-group {
+      margin: 15px 0;
+    }
+
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+      color: #cbd5e1;
+    }
+
+    .slider-value {
+      background: rgba(102, 126, 234, 0.3);
+      padding: 2px 12px;
+      border-radius: 15px;
+      font-weight: bold;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 8px;
+      border-radius: 5px;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    /* Telemetry Display */
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+
+    .telemetry-item {
+      background: rgba(102, 126, 234, 0.1);
+      padding: 15px;
+      border-radius: 10px;
+      border-left: 3px solid #667eea;
+    }
+
+    .telemetry-label {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 5px;
+    }
+
+    .telemetry-value {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #e0e6ed;
+    }
+
+    /* Battery Indicator */
+    .battery-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px;
+      background: rgba(102, 126, 234, 0.1);
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+
+    .battery-icon {
+      width: 60px;
+      height: 30px;
+      border: 3px solid #64748b;
+      border-radius: 5px;
+      position: relative;
+      background: #1e293b;
+    }
+
+    .battery-icon::after {
+      content: '';
+      position: absolute;
+      right: -8px;
+      top: 8px;
+      width: 5px;
+      height: 10px;
+      background: #64748b;
+      border-radius: 0 3px 3px 0;
+    }
+
+    .battery-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+      border-radius: 2px;
+      transition: width 0.5s, background 0.5s;
+    }
+
+    .battery-fill.low {
+      background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+    }
+
+    .battery-fill.medium {
+      background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+    }
+
+    .battery-text {
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    /* GPS Indicator */
+    .gps-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      background: rgba(102, 126, 234, 0.1);
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+
+    .gps-icon {
+      font-size: 1.5rem;
+    }
+
+    /* Logs */
+    .logs-container {
+      max-height: 400px;
+      overflow-y: auto;
+      background: #0a0e27;
+      border-radius: 10px;
+      padding: 15px;
+    }
+
+    .log-entry {
+      padding: 10px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      border-left: 3px solid #667eea;
+      background: rgba(255,255,255,0.03);
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      animation: slideIn 0.3s;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .log-entry.success { border-left-color: #10b981; }
+    .log-entry.error { border-left-color: #ef4444; }
+    .log-entry.started { border-left-color: #3b82f6; }
+
+    .log-time {
+      color: #94a3b8;
+      margin-right: 10px;
+    }
+
+    .log-action {
+      color: #a5b4fc;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+
+    /* ===== KEYBOARD CONTROL STYLES ===== */
+    .keyboard-main {
+      display: flex;
+      gap: 20px;
+    }
+
+    .keyboard-left {
+      flex: 1;
+    }
+
+    .keyboard-right {
+      flex: 0 0 320px;
+    }
+
+    .keyboard-section {
+      margin-bottom: 25px;
+    }
+
+    .keyboard-title {
+      font-size: 1.1rem;
+      color: #cbd5e1;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+
+    .keyboard-layout {
+      background: rgba(102, 126, 234, 0.1);
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid rgba(102, 126, 234, 0.2);
+    }
+
+    .movement-keys {
+      display: grid;
+      grid-template-columns: repeat(3, 80px);
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .key-button {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+      border: 2px solid #667eea;
+      border-radius: 10px;
+      color: #a5b4fc;
+      font-size: 0.9rem;
+      font-weight: bold;
+      cursor: default;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.1s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .key-button.active {
+      background: linear-gradient(145deg, #667eea 0%, #764ba2 100%);
+      border-color: #a5b4fc;
+      box-shadow: 0 0 20px rgba(102, 126, 234, 0.6);
+      transform: scale(0.95);
+    }
+
+    .key-label {
+      font-size: 1.5rem;
+    }
+
+    .key-name {
+      font-size: 0.7rem;
+      color: #94a3b8;
+    }
+
+    .key-button.active .key-name {
+      color: #fff;
+    }
+
+    .rotation-keys {
+      display: grid;
+      grid-template-columns: repeat(2, 80px);
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .altitude-keys {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .altitude-key {
+      padding: 15px;
+      background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+      border: 2px solid #f59e0b;
+      border-radius: 10px;
+      color: #fcd34d;
+      font-weight: bold;
+      text-align: center;
+      cursor: default;
+      transition: all 0.1s;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .altitude-key.active {
+      background: linear-gradient(145deg, #f59e0b 0%, #d97706 100%);
+      border-color: #fde047;
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
+      transform: scale(0.95);
+    }
+
+    .altitude-key.active .key-name {
+      color: #000;
+    }
+
+    .movement-vector {
+      background: #0a0e27;
+      padding: 20px;
+      border-radius: 10px;
+      border: 2px solid rgba(102, 126, 234, 0.3);
+      font-family: 'Courier New', monospace;
+      margin-bottom: 20px;
+    }
+
+    .vector-label {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 10px;
+    }
+
+    .vector-display {
+      background: rgba(102, 126, 234, 0.1);
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 0.9rem;
+      color: #4ade80;
+      line-height: 1.6;
+    }
+
+    .info-box {
+      background: rgba(245, 158, 11, 0.1);
+      padding: 15px;
+      border-radius: 10px;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      font-size: 0.9rem;
+      color: #fcd34d;
+      line-height: 1.6;
+    }
+
+    .status-item {
+      background: rgba(102, 126, 234, 0.1);
+      padding: 15px;
+      border-radius: 10px;
+      border-left: 3px solid #667eea;
+      margin-bottom: 10px;
+    }
+
+    .status-label {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 5px;
+    }
+
+    .status-value {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #e0e6ed;
+    }
+
+    .status-value.highlight {
+      color: #4ade80;
+    }
+
+    .keyboard-button-section {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #1e293b;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #667eea;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #764ba2;
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .keyboard-main {
+        flex-direction: column;
+      }
+
+      .keyboard-right {
+        flex: none;
+      }
+
+      .movement-keys {
+        grid-template-columns: repeat(3, 60px);
+      }
+
+      .key-button {
+        width: 60px;
+        height: 60px;
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🚁 Advanced Drone Control Center</h1>
+      <div class="status-badge">
+        <span class="status-dot"></span>
+        <span id="connectionStatus">Connected to PX4 SITL</span>
+      </div>
+    </header>
+
+    <!-- Tab Navigation -->
+    <div class="tab-nav">
+      <button class="tab-btn active" onclick="switchTab('classic')">📊 Classic Mode</button>
+      <button class="tab-btn" onclick="switchTab('keyboard')">🎮 Keyboard Control</button>
+    </div>
+
+    <!-- ===== CLASSIC MODE ===== -->
+    <div id="classic" class="tab-content active">
+      <div class="dashboard">
+        <!-- Basic Controls -->
+        <div class="panel">
+          <div class="panel-title">
+            <span class="panel-icon">🎮</span>
+            <span>Flight Controls</span>
+          </div>
+          <button class="btn-success" onclick="send('arm')">
+            <span>🔓 ARM</span>
+          </button>
+          <button class="btn-success" onclick="send('takeoff')">
+            <span>🛫 TAKEOFF</span>
+          </button>
+          <button class="btn-warning" onclick="send('land')">
+            <span>🛬 LAND</span>
+          </button>
+          <button class="btn-info" onclick="send('rtl')">
+            <span>🏠 RTL</span>
+          </button>
+          <button class="btn-danger" onclick="send('disarm')">
+            <span>🔒 DISARM</span>
+          </button>
+          <br><br>
+          <button class="btn-emergency" onclick="confirmEmergency()">
+            <span>🚨 EMERGENCY STOP</span>
+          </button>
+        </div>
+
+        <!-- Flight Patterns -->
+        <div class="panel">
+          <div class="panel-title">
+            <span class="panel-icon">✨</span>
+            <span>Flight Patterns</span>
+          </div>
+          <div class="pattern-grid">
+            <button class="pattern-btn" onclick="pattern('square')">
+              <span class="pattern-icon">⬜</span>
+              <span>Square</span>
+            </button>
+            <button class="pattern-btn" onclick="pattern('triangle')">
+              <span class="pattern-icon">🔺</span>
+              <span>Triangle</span>
+            </button>
+            <button class="pattern-btn" onclick="pattern('circle')">
+              <span class="pattern-icon">⭕</span>
+              <span>Circle</span>
+            </button>
+            <button class="pattern-btn" onclick="pattern('star')">
+              <span class="pattern-icon">⭐</span>
+              <span>Star</span>
+            </button>
+            <button class="pattern-btn" onclick="pattern('infinity')">
+              <span class="pattern-icon">∞</span>
+              <span>Infinity</span>
+            </button>
+            <button class="pattern-btn" onclick="pattern('heart')">
+              <span class="pattern-icon">❤️</span>
+              <span>Heart</span>
+            </button>
+            <button class="pattern-btn" onclick="pattern('spiral')">
+              <span class="pattern-icon">🌀</span>
+              <span>Spiral</span>
+            </button>
+            <button class="pattern-btn" onclick="pattern('figure8')">
+              <span class="pattern-icon">8️⃣</span>
+              <span>Figure 8</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Parameters -->
+        <div class="panel">
+          <div class="panel-title">
+            <span class="panel-icon">⚙️</span>
+            <span>Flight Parameters</span>
+          </div>
+          
+          <div class="slider-group">
+            <div class="slider-label">
+              <span>Altitude</span>
+              <span class="slider-value"><span id="hVal">5</span> m</span>
+            </div>
+            <input type="range" min="2" max="15" value="5" id="height"
+                   oninput="document.getElementById('hVal').innerText=this.value">
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-label">
+              <span>Size / Radius</span>
+              <span class="slider-value"><span id="sVal">5</span> m</span>
+            </div>
+            <input type="range" min="3" max="20" value="5" id="size"
+                   oninput="document.getElementById('sVal').innerText=this.value">
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-label">
+              <span>Speed</span>
+              <span class="slider-value"><span id="spdVal">0.5</span> s/step</span>
+            </div>
+            <input type="range" min="0.2" max="2" step="0.1" value="0.5" id="speed"
+                   oninput="document.getElementById('spdVal').innerText=this.value">
+          </div>
+        </div>
+
+        <!-- Telemetry -->
+        <div class="panel">
+          <div class="panel-title">
+            <span class="panel-icon">📊</span>
+            <span>Telemetry</span>
+          </div>
+
+          <!-- Battery -->
+          <div class="battery-container">
+            <div class="battery-icon">
+              <div class="battery-fill" id="batteryFill" style="width: 100%"></div>
+            </div>
+            <div class="battery-text">
+              <span id="batteryPercent">100</span>% 
+              <span style="color: #94a3b8; font-size: 0.9rem;">
+                (<span id="batteryVoltage">12.6</span>V)
+              </span>
+            </div>
+          </div>
+
+          <!-- GPS Status -->
+          <div class="gps-status">
+            <span class="gps-icon">🛰️</span>
+            <div>
+              <div style="font-size: 0.9rem; color: #94a3b8;">GPS Status</div>
+              <div style="font-weight: bold;">
+                <span id="gpsSats">0</span> satellites | 
+                <span id="gpsFixType">NO_FIX</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="telemetry-grid">
+            <div class="telemetry-item">
+              <div class="telemetry-label">Latitude</div>
+              <div class="telemetry-value" id="latitude">0.000000</div>
+            </div>
+            <div class="telemetry-item">
+              <div class="telemetry-label">Longitude</div>
+              <div class="telemetry-value" id="longitude">0.000000</div>
+            </div>
+            <div class="telemetry-item">
+              <div class="telemetry-label">Altitude</div>
+              <div class="telemetry-value"><span id="altitude">0.0</span> m</div>
+            </div>
+            <div class="telemetry-item">
+              <div class="telemetry-label">Flight Mode</div>
+              <div class="telemetry-value" id="flightMode" style="font-size: 1rem;">UNKNOWN</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 15px; padding: 10px; background: rgba(102, 126, 234, 0.1); border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+              <span>Armed: <strong id="isArmed">No</strong></span>
+              <span>Flying: <strong id="isFlying">No</strong></span>
+              <span>Missions: <strong id="missionCount">0</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Flight Logs -->
+        <div class="panel" style="grid-column: span 2;">
+          <div class="panel-title">
+            <span class="panel-icon">📝</span>
+            <span>Flight Logs</span>
+            <button onclick="clearLogs()" style="margin-left: auto; padding: 5px 15px; font-size: 0.9rem;">
+              Clear Logs
+            </button>
+          </div>
+          <div class="logs-container" id="logsContainer">
+            <div class="log-entry">
+              <span class="log-time">--:--:--</span>
+              <span class="log-action">SYSTEM</span>
+              <span>Waiting for commands...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== KEYBOARD MODE ===== -->
+    <div id="keyboard" class="tab-content">
+      <div class="keyboard-main">
+        <div class="keyboard-left">
+          <div class="panel">
+            <div class="panel-title">🎮 Keyboard Control</div>
+
+            <!-- Movement Controls -->
+            <div class="keyboard-section">
+              <div class="keyboard-title">Movement (WASD)</div>
+              <div class="keyboard-layout">
+                <div class="movement-keys">
+                  <div></div>
+                  <div class="key-button" id="keyW" data-key="w">
+                    <span class="key-label">⬆️</span>
+                    <span class="key-name">W - Forward</span>
+                  </div>
+                  <div></div>
+
+                  <div class="key-button" id="keyA" data-key="a">
+                    <span class="key-label">⬅️</span>
+                    <span class="key-name">A - Left</span>
+                  </div>
+                  <div class="key-button" id="keyS" data-key="s">
+                    <span class="key-label">⬇️</span>
+                    <span class="key-name">S - Back</span>
+                  </div>
+                  <div class="key-button" id="keyD" data-key="d">
+                    <span class="key-label">➡️</span>
+                    <span class="key-name">D - Right</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Rotation Controls -->
+            <div class="keyboard-section">
+              <div class="keyboard-title">Rotation (QE)</div>
+              <div class="keyboard-layout">
+                <div class="rotation-keys">
+                  <div class="key-button" id="keyQ" data-key="q">
+                    <span class="key-label">⟲</span>
+                    <span class="key-name">Q - Yaw Left</span>
+                  </div>
+                  <div class="key-button" id="keyE" data-key="e">
+                    <span class="key-label">⟳</span>
+                    <span class="key-name">E - Yaw Right</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Altitude Controls -->
+            <div class="keyboard-section">
+              <div class="keyboard-title">Altitude (X/Z)</div>
+              <div class="keyboard-layout">
+                <div class="altitude-keys">
+                  <div class="altitude-key" id="keyX" data-key="x">
+                    <span class="key-label">📈</span>
+                    <span class="key-name">X - Up</span>
+                  </div>
+                  <div class="altitude-key" id="keyZ" data-key="z">
+                    <span class="key-label">📉</span>
+                    <span class="key-name">Z - Down</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Flight Commands -->
+            <div class="keyboard-button-section">
+              <button class="btn-success" onclick="armDrone()">🔓 ARM</button>
+              <button class="btn-success" onclick="takeoffDrone()">🛫 TAKEOFF</button>
+              <button class="btn-danger" onclick="landDrone()">🛬 LAND</button>
+              <button class="btn-danger" onclick="disarmDrone()">🔒 DISARM</button>
+              <button class="btn-emergency" onclick="emergencyStop()">🚨 EMERGENCY STOP</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status Panel -->
+        <div class="keyboard-right">
+          <div class="panel" style="display: flex; flex-direction: column; gap: 20px;">
+            <div style="border-bottom: 2px solid rgba(165, 180, 252, 0.3); padding-bottom: 15px;">
+              <div class="panel-title" style="margin-bottom: 0;">📊 Status</div>
+            </div>
+
+            <div class="status-item">
+              <div class="status-label">Connection</div>
+              <div class="status-value" id="kbConnectionStatus">Connected</div>
+            </div>
+
+            <div class="status-item">
+              <div class="status-label">Armed Status</div>
+              <div class="status-value" id="kbArmedStatus">Disarmed</div>
+            </div>
+
+            <div class="status-item">
+              <div class="status-label">Flight Mode</div>
+              <div class="status-value" id="kbFlightMode">MANUAL</div>
+            </div>
+
+            <div class="status-item">
+              <div class="status-label">Current Position</div>
+              <div style="font-size: 0.95rem; color: #cbd5e1; line-height: 1.8;">
+                <div>X: <span id="kbPosX" class="status-value highlight" style="font-size: 1rem;">0.00</span> m</div>
+                <div>Y: <span id="kbPosY" class="status-value highlight" style="font-size: 1rem;">0.00</span> m</div>
+                <div>Z: <span id="kbPosZ" class="status-value highlight" style="font-size: 1rem;">0.00</span> m</div>
+              </div>
+            </div>
+
+            <div class="movement-vector">
+              <div class="vector-label"> Movement Vector</div>
+              <div class="vector-display" id="kbVectorDisplay">
+Vx: 0.00 m/s
+Vy: 0.00 m/s
+Vz: 0.00 m/s
+Yaw: 0.00°/s
+              </div>
+            </div>
+
+            <div class="info-box">
+               <strong>Controls:</strong><br>
+              • W/S: Forward/Back<br>
+              • A/D: Left/Right<br>
+              • X/Z: Up/Down<br>
+              • QE: Rotate<br>
+              • Hold keys for smooth motion
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================
+    // Tab Navigation
+    // =========================================
+    function switchTab(tabName) {
+      const tabs = document.querySelectorAll('.tab-content');
+      tabs.forEach(tab => tab.classList.remove('active'));
+
+      const btns = document.querySelectorAll('.tab-btn');
+      btns.forEach(btn => btn.classList.remove('active'));
+
+      document.getElementById(tabName).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    // =========================================
+    // API Functions (Classic Mode)
+    // =========================================
+    async function send(action) {
+      try {
+        const response = await fetch(`/${action}`, {method: "POST"});
+        const data = await response.json();
+        console.log(`${action}:`, data);
+        updateLogs();
+      } catch (error) {
+        console.error(`Error ${action}:`, error);
+      }
+    }
+
+    async function pattern(shape) {
+      const body = {
+        shape,
+        height: document.getElementById("height").value,
+        size: document.getElementById("size").value,
+        speed: document.getElementById("speed").value
+      };
+      
+      try {
+        const response = await fetch("/pattern", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(body)
+        });
+        const data = await response.json();
+        console.log("Pattern:", data);
+        updateLogs();
+      } catch (error) {
+        console.error("Pattern error:", error);
+      }
+    }
+
+    function confirmEmergency() {
+      if (confirm(" EMERGENCY STOP will immediately kill motors! Continue?")) {
+        send('emergency');
+      }
+    }
+
+    async function clearLogs() {
+      await fetch("/logs/clear", {method: "POST"});
+      updateLogs();
+    }
+
+    // =========================================
+    // Update Functions (Classic Mode)
+    // =========================================
+    async function updateTelemetry() {
+      try {
+        const response = await fetch('/telemetry');
+        const data = await response.json();
+        
+        document.getElementById("latitude").innerText = data.position.lat.toFixed(6);
+        document.getElementById("longitude").innerText = data.position.lon.toFixed(6);
+        document.getElementById("altitude").innerText = data.position.rel_alt.toFixed(1);
+        
+        const batteryPercent = Math.round(data.battery.remaining);
+        document.getElementById("batteryPercent").innerText = batteryPercent;
+        document.getElementById("batteryVoltage").innerText = data.battery.voltage.toFixed(1);
+        
+        const batteryFill = document.getElementById("batteryFill");
+        batteryFill.style.width = batteryPercent + "%";
+        batteryFill.className = "battery-fill";
+        if (batteryPercent < 20) batteryFill.className += " low";
+        else if (batteryPercent < 50) batteryFill.className += " medium";
+        
+        document.getElementById("gpsSats").innerText = data.gps.satellites;
+        document.getElementById("gpsFixType").innerText = data.gps.fix_type;
+        
+        document.getElementById("flightMode").innerText = data.flight_mode;
+        document.getElementById("isArmed").innerText = data.is_armed ? "Yes" : "No";
+        document.getElementById("isFlying").innerText = data.state.is_flying ? "Yes" : "No";
+        document.getElementById("missionCount").innerText = data.state.mission_count;
+        
+      } catch (error) {
+        console.error("Telemetry error:", error);
+      }
+    }
+
+    async function updateLogs() {
+      try {
+        const response = await fetch('/logs');
+        const data = await response.json();
+        
+        const logsContainer = document.getElementById("logsContainer");
+        logsContainer.innerHTML = "";
+        
+        if (data.logs.length === 0) {
+          logsContainer.innerHTML = '<div class="log-entry"><span>No logs yet...</span></div>';
+          return;
+        }
+        
+        data.logs.forEach(log => {
+          const entry = document.createElement("div");
+          entry.className = `log-entry ${log.status}`;
+          entry.innerHTML = `
+            <span class="log-time">${log.timestamp}</span>
+            <span class="log-action">${log.action}</span>
+            <span>${log.details}</span>
+          `;
+          logsContainer.appendChild(entry);
+        });
+      } catch (error) {
+        console.error("Logs error:", error);
+      }
+    }
+
+    // =========================================
+    // Keyboard Control (Keyboard Mode) - FIXED
+    // =========================================
+    const keyState = {
+      w: false,
+      a: false,
+      s: false,
+      d: false,
+      q: false,
+      e: false,
+      x: false,
+      z: false
+    };
+
+    const droneState = {
+      velocityX: 0,
+      velocityY: 0,
+      velocityZ: 0,
+      yawRate: 0,
+      posX: 0,
+      posY: 0,
+      posZ: 0,
+      isArmed: false,
+      isFlying: false
+    };
+
+    const SPEED = 3;
+    const YAW_SPEED = 30;
+    const ALTITUDE_SPEED = 1.5;
+    const UPDATE_RATE = 50;
+
+    document.addEventListener('keydown', (e) => {
+      const key = e.key.toLowerCase();
+
+      if (key === 'w') {
+        keyState.w = true;
+        updateKeyVisual('keyW', true);
+      }
+      if (key === 'a') {
+        keyState.a = true;
+        updateKeyVisual('keyA', true);
+      }
+      if (key === 's') {
+        keyState.s = true;
+        updateKeyVisual('keyS', true);
+      }
+      if (key === 'd') {
+        keyState.d = true;
+        updateKeyVisual('keyD', true);
+      }
+      if (key === 'q') {
+        keyState.q = true;
+        updateKeyVisual('keyQ', true);
+      }
+      if (key === 'e') {
+        keyState.e = true;
+        updateKeyVisual('keyE', true);
+      }
+      if (key === 'x') {
+        keyState.x = true;
+        updateKeyVisual('keyX', true);
+      }
+      if (key === 'z') {
+        keyState.z = true;
+        updateKeyVisual('keyZ', true);
+      }
+    });
+
+    document.addEventListener('keyup', (e) => {
+      const key = e.key.toLowerCase();
+
+      if (key === 'w') {
+        keyState.w = false;
+        updateKeyVisual('keyW', false);
+      }
+      if (key === 'a') {
+        keyState.a = false;
+        updateKeyVisual('keyA', false);
+      }
+      if (key === 's') {
+        keyState.s = false;
+        updateKeyVisual('keyS', false);
+      }
+      if (key === 'd') {
+        keyState.d = false;
+        updateKeyVisual('keyD', false);
+      }
+      if (key === 'q') {
+        keyState.q = false;
+        updateKeyVisual('keyQ', false);
+      }
+      if (key === 'e') {
+        keyState.e = false;
+        updateKeyVisual('keyE', false);
+      }
+      if (key === 'x') {
+        keyState.x = false;
+        updateKeyVisual('keyX', false);
+      }
+      if (key === 'z') {
+        keyState.z = false;
+        updateKeyVisual('keyZ', false);
+      }
+    });
+
+    function updateKeyVisual(elementId, isActive) {
+      const element = document.getElementById(elementId);
+      if (element) {
+        if (isActive) {
+          element.classList.add('active');
+        } else {
+          element.classList.remove('active');
+        }
+      }
+    }
+
+    function updateMovement() {
+      // W/S = Forward/Back (Vy)
+      droneState.velocityX = 0;
+      if (keyState.w) droneState.velocityX += SPEED;
+      if (keyState.s) droneState.velocityX -= SPEED;
+
+      // A/D = Left/Right (Vx)
+      droneState.velocityY = 0;
+      if (keyState.d) droneState.velocityY += SPEED;
+      if (keyState.a) droneState.velocityY -= SPEED;
+
+      // X/Z = Up/Down (Vz)
+      droneState.velocityZ = 0;
+      if (keyState.x) droneState.velocityZ -= ALTITUDE_SPEED;
+      if (keyState.z) droneState.velocityZ += ALTITUDE_SPEED;
+
+      // Q/E = Yaw rotation
+      droneState.yawRate = 0;
+      if (keyState.q) droneState.yawRate -= YAW_SPEED;
+      if (keyState.e) droneState.yawRate += YAW_SPEED;
+
+      if (droneState.isFlying) {
+        const dt = UPDATE_RATE / 1000;
+        droneState.posX += droneState.velocityX * dt;
+        droneState.posY += droneState.velocityY * dt;
+        droneState.posZ += droneState.velocityZ * dt;
+      }
+
+      updateStatusDisplay();
+      sendMovementCommand();
+    }
+
+    function updateStatusDisplay() {
+      document.getElementById('kbPosX').innerText = droneState.posX.toFixed(2);
+      document.getElementById('kbPosY').innerText = droneState.posY.toFixed(2);
+      document.getElementById('kbPosZ').innerText = droneState.posZ.toFixed(2);
+
+      document.getElementById('kbVectorDisplay').innerHTML = `
+Vx: ${droneState.velocityX.toFixed(2)} m/s
+Vy: ${droneState.velocityY.toFixed(2)} m/s
+Vz: ${droneState.velocityZ.toFixed(2)} m/s
+Yaw: ${droneState.yawRate.toFixed(1)}°/s
+      `;
+
+      document.getElementById('kbArmedStatus').innerText = droneState.isArmed ? '✅ Armed' : '❌ Disarmed';
+      document.getElementById('kbFlightMode').innerText = droneState.isFlying ? 'OFFBOARD' : 'MANUAL';
+    }
+
+    async function sendMovementCommand() {
+      if (!droneState.isFlying) return;
+
+      try {
+        const cmd = {
+          vx: droneState.velocityX,
+          vy: droneState.velocityY,
+          vz: droneState.velocityZ,
+          yaw_rate: droneState.yawRate
+        };
+
+        await fetch('/velocity', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(cmd)
+        }).catch(() => {});
+      } catch (error) {
+        console.log('Movement command sent');
+      }
+    }
+
+    async function armDrone() {
+      droneState.isArmed = true;
+      updateStatusDisplay();
+      await fetch('/arm', { method: 'POST' }).catch(() => {});
+    }
+
+    async function takeoffDrone() {
+      droneState.isFlying = true;
+      droneState.isArmed = true;
+      updateStatusDisplay();
+      await fetch('/takeoff', { method: 'POST' }).catch(() => {});
+      
+      setTimeout(async () => {
+        await fetch('/offboard/start', { method: 'POST' }).catch(() => {});
+      }, 2000);
+    }
+
+    async function landDrone() {
+      droneState.isFlying = false;
+      updateStatusDisplay();
+      await fetch('/land', { method: 'POST' }).catch(() => {});
+    }
+
+    async function disarmDrone() {
+      droneState.isArmed = false;
+      droneState.isFlying = false;
+      droneState.velocityX = 0;
+      droneState.velocityY = 0;
+      droneState.velocityZ = 0;
+      droneState.yawRate = 0;
+      updateStatusDisplay();
+      await fetch('/disarm', { method: 'POST' }).catch(() => {});
+    }
+
+    async function emergencyStop() {
+      if (confirm(' EMERGENCY STOP will immediately kill motors! Continue?')) {
+        droneState.isFlying = false;
+        droneState.isArmed = false;
+        updateStatusDisplay();
+        await fetch('/emergency', { method: 'POST' }).catch(() => {});
+      }
+    }
+
+    // ===== Main Loop =====
+    setInterval(updateMovement, UPDATE_RATE);
+    setInterval(updateTelemetry, 1000);
+    setInterval(updateLogs, 3000);
+
+    updateStatusDisplay();
+    updateTelemetry();
+    updateLogs();
+  </script>
+</body>
+</html>
